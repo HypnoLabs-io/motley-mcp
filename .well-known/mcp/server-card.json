@@ -1,0 +1,1390 @@
+{
+  "serverInfo": {
+    "name": "motley",
+    "title": "Motley MCP Server",
+    "version": "0.1.0"
+  },
+  "authentication": {
+    "required": false,
+    "schemes": []
+  },
+  "transports": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.motley.nyc/mcp"
+    }
+  ],
+  "websiteUrl": "https://motley.nyc/mcp",
+  "description": "Live NYC family intelligence for AI assistants: neighborhoods, schools, admissions, safety, health, family resources, kids' activities, and neighborhood comparisons.",
+  "tools": [
+    {
+      "annotations": {
+        "title": "Search NYC neighborhoods",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Search and filter NYC neighborhoods by borough or name. Returns NTA codes, names, boroughs, and centroid coordinates.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "borough": {
+            "type": "string",
+            "enum": [
+              "Manhattan",
+              "Brooklyn",
+              "Queens",
+              "Bronx",
+              "Staten Island"
+            ],
+            "description": "Filter by borough"
+          },
+          "query": {
+            "type": "string",
+            "description": "Search NTA name (case-insensitive)"
+          },
+          "limit": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 20,
+            "description": "Max results"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "search-neighborhoods",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number",
+            "description": "Number of neighborhoods returned"
+          },
+          "neighborhoods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nta_code": {
+                  "type": "string"
+                },
+                "nta_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "borough": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "borough_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "slug": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "lat": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "lng": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "nta_code",
+                "nta_name",
+                "borough",
+                "borough_name"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "count",
+          "neighborhoods"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Neighborhood details & scores",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Get full details for a single NYC neighborhood including demographics, raw 0-100 scores, location, and a family-readable interpretation (labeled score bands + cached editorial blurbs). Use the nta_code from search-neighborhoods.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "NTA code (e.g. BK0101)"
+          }
+        },
+        "required": [
+          "nta_code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-neighborhood",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string"
+          },
+          "nta_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "borough": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "borough_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "nta_code",
+          "nta_name",
+          "borough",
+          "borough_name"
+        ],
+        "additionalProperties": true,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Neighborhood fit summary",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Get a decision-ready, family-readable summary of one NYC neighborhood: a one-paragraph fit verdict, labeled score bands (e.g. 'Peace of Mind: strong (78/100)'), and cached editorial blurbs \u2014 with raw scores still available. The interpretation-first front door; start here when a family wants an answer, not a data dump.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "NTA code (e.g. BK0101)"
+          }
+        },
+        "required": [
+          "nta_code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-neighborhood-summary",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string"
+          },
+          "nta_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "borough": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "borough_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nta_code",
+          "nta_name",
+          "borough",
+          "borough_name",
+          "summary"
+        ],
+        "additionalProperties": true,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Schools in a neighborhood",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Get schools within a neighborhood \u2014 public, charter, and private. Includes quality ratings, grade levels, contact info. Use count_only for a quick summary, or limit/offset to page the full list (the response reports total/returned).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "NTA code"
+          },
+          "count_only": {
+            "type": "boolean",
+            "default": false,
+            "description": "Return only counts by governance type"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 50,
+            "description": "Max schools to return (ignored when count_only)"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Number of schools to skip, for paging through the full list"
+          }
+        },
+        "required": [
+          "nta_code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-schools",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total"
+        ],
+        "additionalProperties": true,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Family resources in a neighborhood",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Get family resource counts for a neighborhood: recreation centers, playgrounds, libraries, hospitals, farmers markets, ADA subway stations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "NTA code"
+          }
+        },
+        "required": [
+          "nta_code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-resources",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ntaCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ntaCode"
+        ],
+        "additionalProperties": true,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Kids' activities in a neighborhood",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Get kids' activities and businesses in a neighborhood \u2014 classes, sports, arts, tutoring, etc. from Foursquare data. Use count_only for category breakdown, or limit/offset to page the full list (reports total/returned). Each place's last_refreshed is when we last verified it with Foursquare.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "NTA code"
+          },
+          "count_only": {
+            "type": "boolean",
+            "default": false,
+            "description": "Return only category counts"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 200,
+            "default": 50,
+            "description": "Max activities to return (ignored when count_only)"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Number of activities to skip, for paging through the full list"
+          }
+        },
+        "required": [
+          "nta_code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-activities",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total"
+        ],
+        "additionalProperties": true,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Safety & health indicators",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Get safety and health environment indicators for a neighborhood: crime complaints, collisions, HPD violations, air quality, lead levels, asthma rates \u2014 plus a family-readable interpretation of the Peace of Mind and Air & Water Quality scores.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "NTA code"
+          }
+        },
+        "required": [
+          "nta_code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-safety",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "ntaCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ntaCode"
+        ],
+        "additionalProperties": true,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Find similar neighborhoods",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Find neighborhoods most similar to a given one based on a 9-dimension score vector (family density, wealth, education, safety, transit, etc.). Returns similarity scores.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "NTA code to find similar neighborhoods for"
+          },
+          "limit": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 20,
+            "default": 5,
+            "description": "Number of comparable neighborhoods"
+          }
+        },
+        "required": [
+          "nta_code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-comparable",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "object",
+            "properties": {
+              "nta_code": {
+                "type": "string"
+              },
+              "nta_name": {
+                "type": "string"
+              },
+              "borough": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "borough_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "viability_score": {
+                "type": "number"
+              },
+              "scores_as_of": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "nta_code",
+              "nta_name",
+              "borough",
+              "borough_name",
+              "viability_score",
+              "scores_as_of"
+            ],
+            "additionalProperties": false
+          },
+          "comparables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nta_code": {
+                  "type": "string"
+                },
+                "nta_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "similarity": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "nta_code",
+                "nta_name",
+                "similarity"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "source",
+          "comparables"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Find a neighborhood by address",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "description": "Find which NYC neighborhood (NTA) an address or coordinate is in. Pass a NYC address (geocoded via OpenStreetMap) OR lat+lng. Returns the NTA code, name, borough, and a decision-ready family-fit summary. Use this to turn a real-world location into a neighborhood you can pass to the other tools.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "minLength": 3,
+            "description": "A NYC street address or place name (e.g. \"350 5th Ave, Manhattan\"). Geocoded via OpenStreetMap, NYC-bounded. Provide this OR lat+lng."
+          },
+          "lat": {
+            "type": "number",
+            "minimum": 40.49,
+            "maximum": 40.92,
+            "description": "Latitude (NYC box). Provide with lng instead of an address."
+          },
+          "lng": {
+            "type": "number",
+            "minimum": -74.26,
+            "maximum": -73.68,
+            "description": "Longitude (NYC box). Provide with lat instead of an address."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "find-neighborhood",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "lat": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "lng": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "address",
+              "lat",
+              "lng"
+            ],
+            "additionalProperties": false
+          },
+          "nta": {
+            "type": "object",
+            "properties": {
+              "nta_code": {
+                "type": "string"
+              },
+              "nta_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "borough": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "borough_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "slug": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "nta_code",
+              "nta_name",
+              "borough",
+              "borough_name",
+              "slug"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "query",
+          "nta"
+        ],
+        "additionalProperties": true,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Rank neighborhoods by priorities",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Rank NYC neighborhoods by what a family cares about. Pass per-metric weights (family density, schools, affordability, neighborhood character, transit, safety, air & water quality) and/or ranked priority keywords; optionally scope to one borough. Returns the top neighborhoods with a fit score and the metric breakdown \u2014 a deterministic weighted sort (the per-child Smart Match stays in the Motley app).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "weights": {
+            "type": "object",
+            "properties": {
+              "family_density": {
+                "type": "number",
+                "minimum": 0
+              },
+              "education_orientation": {
+                "type": "number",
+                "minimum": 0
+              },
+              "wealth_index": {
+                "type": "number",
+                "minimum": 0
+              },
+              "neighborhood_stability": {
+                "type": "number",
+                "minimum": 0
+              },
+              "transit_accessibility": {
+                "type": "number",
+                "minimum": 0
+              },
+              "safety_score": {
+                "type": "number",
+                "minimum": 0
+              },
+              "health_environment": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "additionalProperties": false,
+            "description": "Per-metric importance (0+; higher = matters more). Any subset; normalized internally. Overrides priorities when both are given."
+          },
+          "priorities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ranked priority keywords, most important first \u2014 e.g. [\"safety\",\"schools\",\"affordability\"]. Mapped to metric weights with rank decay (used only when `weights` is absent)."
+          },
+          "borough": {
+            "type": "string",
+            "enum": [
+              "Manhattan",
+              "Brooklyn",
+              "Queens",
+              "Bronx",
+              "Staten Island"
+            ],
+            "description": "Restrict the ranking to one borough"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 10,
+            "description": "How many top neighborhoods to return"
+          },
+          "min_population": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 1000,
+            "description": "Residential floor \u2014 drops parks/cemeteries/airports that score ~100 by having almost no residents (default 1000)."
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "rank-neighborhoods",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "weights_used": {
+            "type": "object",
+            "properties": {
+              "family_density": {
+                "type": "number",
+                "minimum": 0
+              },
+              "education_orientation": {
+                "type": "number",
+                "minimum": 0
+              },
+              "wealth_index": {
+                "type": "number",
+                "minimum": 0
+              },
+              "neighborhood_stability": {
+                "type": "number",
+                "minimum": 0
+              },
+              "transit_accessibility": {
+                "type": "number",
+                "minimum": 0
+              },
+              "safety_score": {
+                "type": "number",
+                "minimum": 0
+              },
+              "health_environment": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "family_density",
+              "education_orientation",
+              "wealth_index",
+              "neighborhood_stability",
+              "transit_accessibility",
+              "safety_score",
+              "health_environment"
+            ],
+            "additionalProperties": false
+          },
+          "scope": {
+            "type": "object",
+            "properties": {
+              "borough": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "borough"
+            ],
+            "additionalProperties": false
+          },
+          "count": {
+            "type": "number"
+          },
+          "scores_as_of": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "neighborhoods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rank": {
+                  "type": "number"
+                },
+                "nta_code": {
+                  "type": "string"
+                },
+                "nta_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "borough_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "slug": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "fit_score": {
+                  "type": "number"
+                },
+                "scores": {
+                  "type": "object",
+                  "properties": {
+                    "family_density": {
+                      "$ref": "#/properties/weights_used/properties/family_density"
+                    },
+                    "education_orientation": {
+                      "$ref": "#/properties/weights_used/properties/education_orientation"
+                    },
+                    "wealth_index": {
+                      "$ref": "#/properties/weights_used/properties/wealth_index"
+                    },
+                    "neighborhood_stability": {
+                      "$ref": "#/properties/weights_used/properties/neighborhood_stability"
+                    },
+                    "transit_accessibility": {
+                      "$ref": "#/properties/weights_used/properties/transit_accessibility"
+                    },
+                    "safety_score": {
+                      "$ref": "#/properties/weights_used/properties/safety_score"
+                    },
+                    "health_environment": {
+                      "$ref": "#/properties/weights_used/properties/health_environment"
+                    }
+                  },
+                  "required": [
+                    "family_density",
+                    "education_orientation",
+                    "wealth_index",
+                    "neighborhood_stability",
+                    "transit_accessibility",
+                    "safety_score",
+                    "health_environment"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "required": [
+                "rank",
+                "nta_code",
+                "nta_name",
+                "borough_name",
+                "slug",
+                "fit_score",
+                "scores"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "weights_used",
+          "scope",
+          "count",
+          "scores_as_of",
+          "neighborhoods"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Compare neighborhoods side by side",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Compare 2\u20136 NYC neighborhoods side by side across the 9 family-fit metrics (Family Fit, Families, Affordability, Schools, Neighborhood Character, Transit, Safety, Health, Activities). Pass an array of NTA codes; returns a per-metric matrix with each neighborhood's band and the per-metric leader.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_codes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 6
+            },
+            "minItems": 2,
+            "maxItems": 6,
+            "description": "2\u20136 NTA codes to compare side by side (from search-neighborhoods). Unscored codes are dropped."
+          }
+        },
+        "required": [
+          "nta_codes"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "compare-neighborhoods",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "neighborhoods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nta_code": {
+                  "type": "string"
+                },
+                "nta_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "borough_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "slug": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "nta_code",
+                "nta_name",
+                "borough_name",
+                "slug"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "nta_code": {
+                        "type": "string"
+                      },
+                      "score": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "band": {
+                        "type": "string"
+                      },
+                      "phrase": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "nta_code",
+                      "score",
+                      "band",
+                      "phrase"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "leader_nta_code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "key",
+                "label",
+                "values",
+                "leader_nta_code"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "scores_as_of": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "neighborhoods",
+          "metrics",
+          "scores_as_of"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "NYC admissions methods",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Get the full NYC school-admissions reference: every entry point from 3-K and Pre-K through Kindergarten, Gifted & Talented, and the 8 middle/high admission methods (SHSAT, audition, screened, Ed-Opt, limited unscreened, unscreened, zoned, charter lottery) \u2014 each with its typical application window. The methods carry a live program count; optional band/governance filters narrow that count. Knowledge only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "band": {
+            "type": "string",
+            "enum": [
+              "middle",
+              "high"
+            ],
+            "description": "Filter the MS/HS methods to one grade band"
+          },
+          "governance": {
+            "type": "string",
+            "enum": [
+              "public",
+              "charter"
+            ],
+            "description": "Filter the MS/HS program counts to public or charter schools"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-admissions-methods",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string"
+          },
+          "filters": {
+            "type": "object",
+            "properties": {
+              "band": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "governance": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "band",
+              "governance"
+            ],
+            "additionalProperties": false
+          },
+          "entry_points": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "stage": {
+                  "type": "string"
+                },
+                "short": {
+                  "type": "string"
+                },
+                "full": {
+                  "type": "string"
+                },
+                "typical_window": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "label",
+                "stage",
+                "short",
+                "full",
+                "typical_window"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "short": {
+                  "type": "string"
+                },
+                "full": {
+                  "type": "string"
+                },
+                "typical_window": {
+                  "type": "string"
+                },
+                "program_count": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "key",
+                "label",
+                "short",
+                "full",
+                "typical_window",
+                "program_count"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "note",
+          "filters",
+          "entry_points",
+          "methods"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Explain an admission method",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Explain one NYC admission entry point or method in full \u2014 the plain-English explainer plus its typical deadline window. Pass a method key (shsat, audition, screened, ed_opt, limited_unscreened, unscreened, zoned, charter_lottery) or an early entry point (three-k, pre-k, kindergarten, gifted-talented).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "description": "An admission method key (shsat, audition, screened, ed_opt, limited_unscreened, unscreened, zoned, charter_lottery) OR an early entry point (three-k, pre-k, kindergarten, gifted-talented)."
+          }
+        },
+        "required": [
+          "method"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "explain-admissions-method",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "entry_point",
+              "method"
+            ]
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "short": {
+            "type": "string"
+          },
+          "full": {
+            "type": "string"
+          },
+          "typical_window": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "program_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "kind",
+          "key",
+          "label",
+          "short",
+          "full",
+          "typical_window"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    },
+    {
+      "annotations": {
+        "title": "School admissions competitiveness",
+        "readOnlyHint": true,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Get how competitive admission to one specific school is, program by program: seats vs. applicants, applicants-per-seat, offer/fill rate, and a family-readable competitiveness tier (Accessible / Competitive / Highly Competitive). Pass a school DBN (from get-schools). Sourced from MySchools \u2014 present mostly for screened/choice high-school programs; zoned, charter-lottery, and private schools usually have none.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dbn": {
+            "type": "string",
+            "maxLength": 40,
+            "description": "School DBN (e.g. 02M475 for Stuyvesant, 13K430 for Brooklyn Tech)"
+          }
+        },
+        "required": [
+          "dbn"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-admissions-demand",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "dbn": {
+            "type": "string"
+          },
+          "school_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "governance": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "programs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "program": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "method": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "seats": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "applicants": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "apps_per_seat": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "offer_rate": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "fill_rate": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "competitiveness": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "description": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "program",
+                "method",
+                "seats",
+                "applicants",
+                "apps_per_seat",
+                "offer_rate",
+                "fill_rate",
+                "competitiveness",
+                "description"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "dbn",
+          "school_name",
+          "governance",
+          "note",
+          "programs"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      }
+    }
+  ],
+  "resources": [],
+  "prompts": []
+}

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "motley": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.motley.nyc/mcp"
+      ]
+    }
+  }
+}
