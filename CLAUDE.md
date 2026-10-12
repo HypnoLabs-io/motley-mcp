@@ -16,8 +16,8 @@ It is **metadata only** — there is no server code here. The running server liv
 
 ## Files (this is the whole repo)
 
-- `server.json` — Official MCP Registry record. Registry name `io.github.HypnoLabs-io/motley-mcp`. Bump `version` when the server's tool surface changes.
-- `.well-known/mcp/server-card.json` — the server card: server info, the 14 tool schemas, transports, and auth. Also intended to be served at `https://motley.nyc/.well-known/mcp/server-card.json`. Keep it in sync with the live server's `tools/list`.
+- `server.json` — Official MCP Registry record. Registry name `nyc.motley/mcp`. Keep it identical to the published record, and bump `version` when the server's tool surface changes.
+- `.well-known/mcp/server-card.json` — the server card: server info, every tool's input and output schema, transports, and auth. Also intended to be served at `https://motley.nyc/.well-known/mcp/server-card.json`. Keep it in sync with the live server's `tools/list`.
 - `mcp-config.json` — copy-paste client config (stdio bridge via `mcp-remote`).
 - `README.md` — the public description, tool list, and connection instructions.
 
@@ -37,5 +37,5 @@ enough — history must be rewritten and force-pushed.
 ## Editing
 
 - Changing the tool surface: update `.well-known/mcp/server-card.json` to match the live server, keep the README tool list in sync, and bump `version` in `server.json`.
-- Publishing to the Official MCP Registry uses `mcp-publisher` (`validate` → `login github` → `publish server.json`), invoked from a binary on your `PATH` — do not hardcode its location.
+- Publishing to the Official MCP Registry uses `mcp-publisher` (`validate` → `login` → `publish server.json`), invoked from a binary on your `PATH` — do not hardcode its location. The `nyc.motley` namespace authenticates by domain (`login http --domain motley.nyc`), never with a key committed here.
 - Keep the README accurate to what the server actually exposes; do not invent tools or fields.

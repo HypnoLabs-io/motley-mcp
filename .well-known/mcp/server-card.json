@@ -1,8 +1,8 @@
 {
   "serverInfo": {
     "name": "motley",
-    "title": "Motley MCP Server",
-    "version": "0.1.0"
+    "title": "Motley — NYC Neighborhoods, Schools & Admissions",
+    "version": "0.3.0"
   },
   "authentication": {
     "required": false,
@@ -21,6 +21,7 @@
       "annotations": {
         "title": "Search NYC neighborhoods",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
@@ -123,12 +124,17 @@
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Searching NYC neighborhoods…",
+        "openai/toolInvocation/invoked": "Found neighborhoods"
       }
     },
     {
       "annotations": {
         "title": "Neighborhood details & scores",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
@@ -182,16 +188,21 @@
         ],
         "additionalProperties": true,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Loading neighborhood details…",
+        "openai/toolInvocation/invoked": "Loaded neighborhood details"
       }
     },
     {
       "annotations": {
         "title": "Neighborhood fit summary",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get a decision-ready, family-readable summary of one NYC neighborhood: a one-paragraph fit verdict, labeled score bands (e.g. 'Peace of Mind: strong (78/100)'), and cached editorial blurbs \u2014 with raw scores still available. The interpretation-first front door; start here when a family wants an answer, not a data dump.",
+      "description": "Get a decision-ready, family-readable summary of one NYC neighborhood: a one-paragraph fit verdict, labeled score bands (e.g. 'Peace of Mind: strong (78/100)'), and cached editorial blurbs — with raw scores still available, plus a link to the neighborhood's Motley page. The interpretation-first front door; start here when a family wants an answer, not a data dump.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -234,6 +245,12 @@
           },
           "summary": {
             "type": "string"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -241,20 +258,26 @@
           "nta_name",
           "borough",
           "borough_name",
-          "summary"
+          "summary",
+          "url"
         ],
         "additionalProperties": true,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Reading the neighborhood's fit…",
+        "openai/toolInvocation/invoked": "Neighborhood summary ready"
       }
     },
     {
       "annotations": {
         "title": "Schools in a neighborhood",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get schools within a neighborhood \u2014 public, charter, and private. Includes quality ratings, grade levels, contact info. Use count_only for a quick summary, or limit/offset to page the full list (the response reports total/returned).",
+      "description": "Get schools within a neighborhood — public, charter, and private. Includes quality ratings, grade levels, contact info. Use count_only for a quick summary, or limit/offset to page the full list (the response reports total/returned).",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -301,12 +324,593 @@
         ],
         "additionalProperties": true,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Listing schools in the neighborhood…",
+        "openai/toolInvocation/invoked": "Listed schools"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Find schools across NYC",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Find NYC schools citywide by what a family wants — borough, community school district (1-32), grade band (pre-K/elementary/middle/high), school type (public/charter/private), admissions method (zoned, screened, unscreened, limited unscreened, ed-opt, audition, SHSAT, charter lottery, private, universal pre-K), and program focus (arts, sports, STEM, language, academic, clubs). Use this when the family describes the KIND of school they want; use get-schools when you already have an nta_code and want everything in that neighborhood. Pass only the filters actually stated — at least one is required, and an invented one returns nothing. Program focus is tagged on public and charter schools only.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "borough": {
+            "type": "string",
+            "enum": [
+              "Manhattan",
+              "Brooklyn",
+              "Queens",
+              "Bronx",
+              "Staten Island"
+            ],
+            "description": "Limit to one borough. Omit unless the family named one."
+          },
+          "district": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            },
+            "minItems": 1,
+            "maxItems": 8,
+            "description": "Community school district numbers, 1-32. A borough is NOT a district — for 'schools in the Bronx' use `borough` and omit this. Never guess one."
+          },
+          "grade_band": {
+            "type": "string",
+            "enum": [
+              "prek",
+              "elementary",
+              "middle",
+              "high"
+            ],
+            "description": "prek (K-12 schools that also run 3-K/pre-K), elementary (K-5), middle (6-8), high (9-12)"
+          },
+          "governance": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "public",
+                "charter",
+                "private"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 3,
+            "description": "School type. Omit unless the family named one."
+          },
+          "admissions_method": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "zoned",
+                "unscreened",
+                "limited_unscreened",
+                "screened",
+                "ed_opt",
+                "audition",
+                "shsat",
+                "charter_lottery",
+                "private_admissions",
+                "prek_universal"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 10,
+            "description": "How the school admits students; matches a school admitting by ANY listed method. Call get-admissions-methods or explain-admissions-method for what each one means."
+          },
+          "program_categories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "academic",
+                "arts",
+                "sports",
+                "stem",
+                "language",
+                "extracurricular"
+              ]
+            },
+            "minItems": 1,
+            "maxItems": 6,
+            "description": "Program focus; matches a school offering ANY listed focus. 'arts' covers art, music, dance, drama and theater; 'extracurricular' means clubs. Tagged on public and charter schools ONLY."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "default": 20,
+            "description": "Max schools to return"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 200,
+            "default": 0,
+            "description": "Number of schools to skip, for paging"
+          }
+        },
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "browse-schools",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "returned": {
+            "type": "number"
+          },
+          "filters_applied": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "schools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dbn": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "governance": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "grade_levels": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "district": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "neighborhood": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nta_code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "borough": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "slug": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "programs": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "category": {
+                        "type": "string"
+                      },
+                      "label": {
+                        "type": "string"
+                      },
+                      "examples": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "category",
+                      "label",
+                      "examples"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "dbn",
+                "name",
+                "address",
+                "governance",
+                "grade_levels",
+                "district",
+                "neighborhood",
+                "nta_code",
+                "borough",
+                "slug"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "total",
+          "returned",
+          "filters_applied",
+          "schools"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Finding matching schools…",
+        "openai/toolInvocation/invoked": "Found schools"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Look up a school by name",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Use this to turn a school's name into its DBN — the official name, a common short form ('Brooklyn Tech', 'PS 321'), or a DBN to confirm. Returns candidate schools with their district, neighborhood, admission method and Motley page; pick the one that matches and pass its dbn to get-admissions-demand. Never guess a DBN. K-12 schools only (public, charter, private).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 120,
+            "description": "The school as the family named it: its official name ('Townsend Harris High School'), a common short form ('Brooklyn Tech', 'PS 321'), or its DBN ('02M475')."
+          },
+          "borough": {
+            "type": "string",
+            "enum": [
+              "Manhattan",
+              "Brooklyn",
+              "Queens",
+              "Bronx",
+              "Staten Island"
+            ],
+            "description": "Narrow a name search to one borough when the family named it. Ignored when the query is a DBN."
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 5,
+            "description": "Max candidates to return"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "find-school",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "schools": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dbn": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "governance": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "grade_levels": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "address": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "borough": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "district": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "nta_code": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nta_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "admissions_method": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "admissions_methods": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "url": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "dbn",
+                "name",
+                "governance",
+                "grade_levels",
+                "address",
+                "borough",
+                "district",
+                "nta_code",
+                "nta_name",
+                "admissions_method",
+                "admissions_methods",
+                "url"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "count",
+          "total",
+          "schools"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Looking up the school…",
+        "openai/toolInvocation/invoked": "Found matching schools"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Find the zoned school for an address",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      },
+      "description": "Use this when a family asks which elementary school is zoned for a home they live in or are considering. Pass the street address they gave — building number and street, ideally with the borough — never the device's location. Returns the zoned K-5 school, the neighborhood, and how zoned admission works; some areas, like all of District 1, have no zoned school.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 200,
+            "description": "The street address of a home the family lives in or is considering, with the building number and ideally the borough — e.g. \"123 7th Ave, Brooklyn\". Only an address the family gave you; never the device's location."
+          }
+        },
+        "required": [
+          "address"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "get-zoned-school",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "found": {
+            "type": "boolean"
+          },
+          "matched_address": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "not_found",
+              "outside_nyc",
+              "ambiguous",
+              "no_zone"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "neighborhood": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "nta_code": {
+                    "type": "string"
+                  },
+                  "nta_name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "borough": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "nta_code",
+                  "nta_name",
+                  "borough",
+                  "url"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "zoned_school": {
+            "type": "object",
+            "properties": {
+              "dbn": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "address": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "grade_levels": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "dbn",
+              "name",
+              "address",
+              "district",
+              "grade_levels",
+              "url"
+            ],
+            "additionalProperties": false
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "query",
+          "found",
+          "matched_address"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Finding the zoned school…",
+        "openai/toolInvocation/invoked": "Zoned school lookup done"
       }
     },
     {
       "annotations": {
         "title": "Family resources in a neighborhood",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
@@ -339,16 +943,21 @@
         ],
         "additionalProperties": true,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Counting family resources…",
+        "openai/toolInvocation/invoked": "Counted family resources"
       }
     },
     {
       "annotations": {
         "title": "Kids' activities in a neighborhood",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get kids' activities and businesses in a neighborhood \u2014 classes, sports, arts, tutoring, etc. from Foursquare data. Use count_only for category breakdown, or limit/offset to page the full list (reports total/returned). Each place's last_refreshed is when we last verified it with Foursquare.",
+      "description": "Get kids' activities and businesses in a neighborhood — classes, sports, arts, tutoring, etc. Use count_only for category breakdown, or limit/offset to page the full list (reports total/returned). Each place's last_refreshed is when we last confirmed it was still listed.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -395,16 +1004,21 @@
         ],
         "additionalProperties": true,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Finding kids' activities…",
+        "openai/toolInvocation/invoked": "Found kids' activities"
       }
     },
     {
       "annotations": {
         "title": "Safety & health indicators",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get safety and health environment indicators for a neighborhood: crime complaints, collisions, HPD violations, air quality, lead levels, asthma rates \u2014 plus a family-readable interpretation of the Peace of Mind and Air & Water Quality scores.",
+      "description": "Get safety and health environment indicators for a neighborhood: crime complaints, collisions, HPD violations, air quality, lead levels, asthma rates — plus a family-readable interpretation of the Peace of Mind and Air & Water Quality scores.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -433,12 +1047,17 @@
         ],
         "additionalProperties": true,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Checking safety & health data…",
+        "openai/toolInvocation/invoked": "Checked safety & health"
       }
     },
     {
       "annotations": {
         "title": "Find similar neighborhoods",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
@@ -543,35 +1162,40 @@
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Finding similar neighborhoods…",
+        "openai/toolInvocation/invoked": "Found similar neighborhoods"
       }
     },
     {
       "annotations": {
         "title": "Find a neighborhood by address",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": true
       },
-      "description": "Find which NYC neighborhood (NTA) an address or coordinate is in. Pass a NYC address (geocoded via OpenStreetMap) OR lat+lng. Returns the NTA code, name, borough, and a decision-ready family-fit summary. Use this to turn a real-world location into a neighborhood you can pass to the other tools.",
+      "description": "Find which NYC neighborhood (NTA) an address or coordinate is in. Pass a NYC address the family gave (placed with NYC's official address directory; include the borough when you know it) OR lat+lng. Returns the NTA code, name, borough, a link to the neighborhood's Motley page, and a decision-ready family-fit summary. Use this to turn a real-world location into a neighborhood you can pass to the other tools.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
             "minLength": 3,
-            "description": "A NYC street address or place name (e.g. \"350 5th Ave, Manhattan\"). Geocoded via OpenStreetMap, NYC-bounded. Provide this OR lat+lng."
+            "description": "A NYC street address or place name the family gave (e.g. \"350 5th Ave, Manhattan\") — never the device's location. Geocoded with NYC's official address directory; include the borough when you know it. Provide this OR lat+lng."
           },
           "lat": {
             "type": "number",
             "minimum": 40.49,
             "maximum": 40.92,
-            "description": "Latitude (NYC box). Provide with lng instead of an address."
+            "description": "Latitude of a point the family named or picked (NYC box) — never the device's location. Provide with lng instead of an address."
           },
           "lng": {
             "type": "number",
             "minimum": -74.26,
             "maximum": -73.68,
-            "description": "Longitude (NYC box). Provide with lat instead of an address."
+            "description": "Longitude of a point the family named or picked (NYC box) — never the device's location. Provide with lat instead of an address."
           }
         },
         "additionalProperties": false,
@@ -649,24 +1273,36 @@
               "slug"
             ],
             "additionalProperties": false
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
           "query",
-          "nta"
+          "nta",
+          "url"
         ],
         "additionalProperties": true,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Placing the address…",
+        "openai/toolInvocation/invoked": "Found the neighborhood"
       }
     },
     {
       "annotations": {
         "title": "Rank neighborhoods by priorities",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Rank NYC neighborhoods by what a family cares about. Pass per-metric weights (family density, schools, affordability, neighborhood character, transit, safety, air & water quality) and/or ranked priority keywords; optionally scope to one borough. Returns the top neighborhoods with a fit score and the metric breakdown \u2014 a deterministic weighted sort (the per-child Smart Match stays in the Motley app).",
+      "description": "Rank NYC neighborhoods by what a family cares about. Pass per-metric weights (family density, schools, affordability, neighborhood character, transit, safety, air & water quality) and/or ranked priority keywords; optionally scope to one borough. Returns the top neighborhoods with a fit score and the metric breakdown — a deterministic weighted sort over neighborhood-level data, not a per-child school match.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -710,7 +1346,7 @@
             "items": {
               "type": "string"
             },
-            "description": "Ranked priority keywords, most important first \u2014 e.g. [\"safety\",\"schools\",\"affordability\"]. Mapped to metric weights with rank decay (used only when `weights` is absent)."
+            "description": "Ranked priority keywords, most important first — e.g. [\"safety\",\"schools\",\"affordability\"]. Mapped to metric weights with rank decay (used only when `weights` is absent)."
           },
           "borough": {
             "type": "string",
@@ -734,7 +1370,7 @@
             "type": "integer",
             "minimum": 0,
             "default": 1000,
-            "description": "Residential floor \u2014 drops parks/cemeteries/airports that score ~100 by having almost no residents (default 1000)."
+            "description": "Residential floor — drops parks/cemeteries/airports that score ~100 by having almost no residents (default 1000)."
           }
         },
         "additionalProperties": false,
@@ -902,16 +1538,21 @@
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Ranking neighborhoods…",
+        "openai/toolInvocation/invoked": "Ranked neighborhoods"
       }
     },
     {
       "annotations": {
         "title": "Compare neighborhoods side by side",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Compare 2\u20136 NYC neighborhoods side by side across the 9 family-fit metrics (Family Fit, Families, Affordability, Schools, Neighborhood Character, Transit, Safety, Health, Activities). Pass an array of NTA codes; returns a per-metric matrix with each neighborhood's band and the per-metric leader.",
+      "description": "Compare 2–6 NYC neighborhoods side by side across the 9 family-fit metrics (Family Fit, Families, Affordability, Schools, Neighborhood Character, Transit, Safety, Health, Activities). Pass an array of NTA codes; returns a per-metric matrix with each neighborhood's band and the per-metric leader.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -923,7 +1564,7 @@
             },
             "minItems": 2,
             "maxItems": 6,
-            "description": "2\u20136 NTA codes to compare side by side (from search-neighborhoods). Unscored codes are dropped."
+            "description": "2–6 NTA codes to compare side by side (from search-neighborhoods). Unscored codes are dropped."
           }
         },
         "required": [
@@ -1043,16 +1684,21 @@
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Comparing neighborhoods…",
+        "openai/toolInvocation/invoked": "Compared neighborhoods"
       }
     },
     {
       "annotations": {
         "title": "NYC admissions methods",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get the full NYC school-admissions reference: every entry point from 3-K and Pre-K through Kindergarten, Gifted & Talented, and the 8 middle/high admission methods (SHSAT, audition, screened, Ed-Opt, limited unscreened, unscreened, zoned, charter lottery) \u2014 each with its typical application window. The methods carry a live program count; optional band/governance filters narrow that count. Knowledge only.",
+      "description": "Get the full NYC school-admissions reference: every entry point from 3-K and Pre-K through Kindergarten, Gifted & Talented, and the 8 middle/high admission methods (SHSAT, audition, screened, Ed-Opt, limited unscreened, unscreened, zoned, charter lottery) — each with its typical application window. The methods carry a live program count plus a special_badge naming any extra ask beyond the standard application (an audition, a test, an open-house sign-in), null when there is none; optional band/governance filters narrow the count. Knowledge only.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1162,6 +1808,12 @@
                 },
                 "program_count": {
                   "type": "number"
+                },
+                "special_badge": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 }
               },
               "required": [
@@ -1170,7 +1822,8 @@
                 "short",
                 "full",
                 "typical_window",
-                "program_count"
+                "program_count",
+                "special_badge"
               ],
               "additionalProperties": false
             }
@@ -1184,22 +1837,27 @@
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Loading NYC admissions methods…",
+        "openai/toolInvocation/invoked": "Loaded admissions methods"
       }
     },
     {
       "annotations": {
         "title": "Explain an admission method",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Explain one NYC admission entry point or method in full \u2014 the plain-English explainer plus its typical deadline window. Pass a method key (shsat, audition, screened, ed_opt, limited_unscreened, unscreened, zoned, charter_lottery) or an early entry point (three-k, pre-k, kindergarten, gifted-talented).",
+      "description": "Explain one NYC admission entry point or method in full — the plain-English explainer, its typical deadline window, and, when the method asks a family for more than a ranked application, exactly what it requires (audition or portfolio, SHSAT registration, a demonstrated-interest sign-in, a private school's own test/interview track) plus the extra paperwork that comes with it. Pass a method key (shsat, audition, screened, ed_opt, limited_unscreened, unscreened, zoned, charter_lottery, private_admissions, prek_universal) or an early entry point (three-k, pre-k, kindergarten, gifted-talented).",
       "inputSchema": {
         "type": "object",
         "properties": {
           "method": {
             "type": "string",
-            "description": "An admission method key (shsat, audition, screened, ed_opt, limited_unscreened, unscreened, zoned, charter_lottery) OR an early entry point (three-k, pre-k, kindergarten, gifted-talented)."
+            "description": "An admission method key (shsat, audition, screened, ed_opt, limited_unscreened, unscreened, zoned, charter_lottery, private_admissions, prek_universal) OR an early entry point (three-k, pre-k, kindergarten, gifted-talented)."
           }
         },
         "required": [
@@ -1239,6 +1897,53 @@
           },
           "program_count": {
             "type": "number"
+          },
+          "special_requirements": {
+            "type": "object",
+            "properties": {
+              "badge": {
+                "type": "string"
+              },
+              "headline": {
+                "type": "string"
+              },
+              "requirements": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "extra_documents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "required": {
+                      "type": "boolean"
+                    },
+                    "notes": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "required",
+                    "notes"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "badge",
+              "headline",
+              "requirements",
+              "extra_documents"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -1251,23 +1956,28 @@
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Explaining the admission method…",
+        "openai/toolInvocation/invoked": "Explained the method"
       }
     },
     {
       "annotations": {
-        "title": "School admissions competitiveness",
+        "title": "How a school admits students",
         "readOnlyHint": true,
+        "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get how competitive admission to one specific school is, program by program: seats vs. applicants, applicants-per-seat, offer/fill rate, and a family-readable competitiveness tier (Accessible / Competitive / Highly Competitive). Pass a school DBN (from get-schools). Sourced from MySchools \u2014 present mostly for screened/choice high-school programs; zoned, charter-lottery, and private schools usually have none.",
+      "description": "Use this when a family asks how a specific school admits students or how hard it is to get in. Returns the school's admission method in full (what it asks of a family, and when), its programs with seats and who may apply, and — where NYC MySchools publishes them — seats vs. applicants per program with a competitiveness band that is Motley's own, not a DOE rating. Most middle schools, and all charter and private schools, have no applicant counts; never estimate odds. Needs a DBN; resolve a name with find-school first.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "dbn": {
             "type": "string",
             "maxLength": 40,
-            "description": "School DBN (e.g. 02M475 for Stuyvesant, 13K430 for Brooklyn Tech)"
+            "description": "School DBN (e.g. 02M475 for Stuyvesant, 13K430 for Brooklyn Tech). Resolve a school's name with find-school first; never guess one."
           }
         },
         "required": [
@@ -1371,6 +2081,144 @@
               ],
               "additionalProperties": false
             }
+          },
+          "admissions_method": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "admissions_methods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "label"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "method": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "short": {
+                "type": "string"
+              },
+              "full": {
+                "type": "string"
+              },
+              "typical_window": {
+                "type": "string"
+              },
+              "special_requirements": {
+                "type": "object",
+                "properties": {
+                  "badge": {
+                    "type": "string"
+                  },
+                  "headline": {
+                    "type": "string"
+                  },
+                  "requirements": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "extra_documents": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "label": {
+                          "type": "string"
+                        },
+                        "required": {
+                          "type": "boolean"
+                        },
+                        "notes": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "label",
+                        "required",
+                        "notes"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "badge",
+                  "headline",
+                  "requirements",
+                  "extra_documents"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "short",
+              "full",
+              "typical_window"
+            ],
+            "additionalProperties": false
+          },
+          "program_offerings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "method": {
+                  "type": "string"
+                },
+                "method_key": {
+                  "type": "string"
+                },
+                "seats": {
+                  "type": "number"
+                },
+                "eligibility": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "method",
+                "method_key"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "message": {
+            "type": "string"
           }
         },
         "required": [
@@ -1378,13 +2226,85 @@
           "school_name",
           "governance",
           "note",
-          "programs"
+          "programs",
+          "admissions_method",
+          "admissions_methods",
+          "program_offerings",
+          "url"
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Checking how this school admits…",
+        "openai/toolInvocation/invoked": "Checked school admissions"
       }
     }
   ],
-  "resources": [],
-  "prompts": []
+  "resources": [
+    {
+      "mimeType": "application/json",
+      "name": "NYC neighborhoods catalog",
+      "uri": "motley://neighborhoods"
+    },
+    {
+      "mimeType": "application/json",
+      "name": "NYC admissions reference",
+      "uri": "motley://admissions/methods"
+    }
+  ],
+  "resourceTemplates": [
+    {
+      "description": "A decision-ready family-fit summary of one NYC neighborhood (verdict + labeled score bands + cached blurbs + raw scores), addressable by NTA code. Same payload as the get-neighborhood-summary tool.",
+      "mimeType": "application/json",
+      "name": "Neighborhood summary",
+      "uriTemplate": "motley://neighborhood/{nta_code}"
+    },
+    {
+      "description": "One NYC admission entry point or method in full (plain-English explainer + typical deadline window + any special requirements the method adds), addressable by key. Same payload as explain-admissions-method.",
+      "mimeType": "application/json",
+      "name": "Admission method explainer",
+      "uriTemplate": "motley://admissions/method/{key}"
+    }
+  ],
+  "prompts": [
+    {
+      "arguments": [
+        {
+          "name": "borough",
+          "description": "NYC borough to search (Manhattan, Brooklyn, Queens, Bronx, Staten Island).",
+          "required": true
+        },
+        {
+          "name": "child_age",
+          "description": "Your child's age in years (optional — helps weight schools vs. playgrounds).",
+          "required": false
+        }
+      ],
+      "description": "Compare NYC neighborhoods for a young family in a given borough, weighing safety, schools, and family density.",
+      "name": "compare-neighborhoods-for-young-family"
+    },
+    {
+      "arguments": [
+        {
+          "name": "nta_code",
+          "description": "NTA code of the neighborhood to assess (e.g. BK0101). Completes against the live NTA list.",
+          "required": true
+        }
+      ],
+      "description": "Assess whether one NYC neighborhood is a good fit for a family with a toddler (playgrounds, safety, nearby activities).",
+      "name": "neighborhood-fit-for-toddler"
+    },
+    {
+      "arguments": [
+        {
+          "name": "entry_point",
+          "description": "The entry point to explain (three-k, pre-k, kindergarten, gifted-talented). Defaults to kindergarten.",
+          "required": false
+        }
+      ],
+      "description": "Walk a parent through how NYC admissions works for a given early entry point (defaults to kindergarten) — the process and the typical application window.",
+      "name": "kindergarten-admissions-timeline"
+    }
+  ]
 }
