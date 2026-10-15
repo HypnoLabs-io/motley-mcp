@@ -2,7 +2,7 @@
   "serverInfo": {
     "name": "motley",
     "title": "Motley — NYC Neighborhoods, Schools & Admissions",
-    "version": "0.3.0"
+    "version": "0.3.1"
   },
   "authentication": {
     "required": false,
