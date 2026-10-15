@@ -1970,7 +1970,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Use this when a family asks how a specific school admits students or how hard it is to get in. Returns the school's admission method in full (what it asks of a family, and when), its programs with seats and who may apply, and — where NYC MySchools publishes them — seats vs. applicants per program with a competitiveness band that is Motley's own, not a DOE rating. Most middle schools, and all charter and private schools, have no applicant counts; never estimate odds. Needs a DBN; resolve a name with find-school first.",
+      "description": "Use this when a family asks how a specific school admits students or how hard it is to get in. Returns the school's admission method in full (what it asks of a family, and when), its programs with seats and who may apply, and — where NYC MySchools publishes them — seats vs. applicants per program with a competitiveness band that is Motley's own, not a DOE rating. Most middle schools, and all charter and private schools, have no applicant counts. The counts describe the whole applicant pool: never turn them into a family's odds, chance or percentage, even when asked for one. Needs a DBN; resolve a name with find-school first.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2043,12 +2043,6 @@
                     "null"
                   ]
                 },
-                "offer_rate": {
-                  "type": [
-                    "number",
-                    "null"
-                  ]
-                },
                 "fill_rate": {
                   "type": [
                     "number",
@@ -2074,7 +2068,6 @@
                 "seats",
                 "applicants",
                 "apps_per_seat",
-                "offer_rate",
                 "fill_rate",
                 "competitiveness",
                 "description"
