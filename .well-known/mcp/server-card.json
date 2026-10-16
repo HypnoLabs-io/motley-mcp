@@ -2,7 +2,7 @@
   "serverInfo": {
     "name": "motley",
     "title": "Motley — NYC Neighborhoods, Schools & Admissions",
-    "version": "0.3.1"
+    "version": "0.3.2"
   },
   "authentication": {
     "required": false,
@@ -754,7 +754,7 @@
         "idempotentHint": true,
         "openWorldHint": true
       },
-      "description": "Use this when a family asks which elementary school is zoned for a home they live in or are considering. Pass the street address they gave — building number and street, ideally with the borough — never the device's location. Returns the zoned K-5 school, the neighborhood, and how zoned admission works; some areas, like all of District 1, have no zoned school.",
+      "description": "Use this when a family asks which elementary school is zoned for a specific NYC address, such as an apartment or building they name. NYC draws school zones building by building, so pass the street address exactly as they typed it — building number and street, ideally with the borough — never the device's location. Returns the zoned K-5 school, the neighborhood, and how zoned admission works; some areas, like all of District 1, have no zoned school.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -762,7 +762,7 @@
             "type": "string",
             "minLength": 5,
             "maxLength": 200,
-            "description": "The street address of a home the family lives in or is considering, with the building number and ideally the borough — e.g. \"123 7th Ave, Brooklyn\". Only an address the family gave you; never the device's location."
+            "description": "The NYC street address to look up, as the family typed it, with the building number and ideally the borough — e.g. \"123 7th Ave, Brooklyn\". A zone line can run between two buildings on one block, so a city or neighborhood can't answer this; never the device's location."
           }
         },
         "required": [
@@ -1018,7 +1018,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get safety and health environment indicators for a neighborhood: crime complaints, collisions, HPD violations, air quality, lead levels, asthma rates — plus a family-readable interpretation of the Peace of Mind and Air & Water Quality scores.",
+      "description": "Get safety and health environment indicators for a neighborhood: crime complaints, collisions, HPD violations, air quality, lead levels, asthma rates — plus a family-readable interpretation of the Peace of Mind and Air & Child Health scores.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1302,7 +1302,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Rank NYC neighborhoods by what a family cares about. Pass per-metric weights (family density, schools, affordability, neighborhood character, transit, safety, air & water quality) and/or ranked priority keywords; optionally scope to one borough. Returns the top neighborhoods with a fit score and the metric breakdown — a deterministic weighted sort over neighborhood-level data, not a per-child school match.",
+      "description": "Rank NYC neighborhoods by what a family cares about. Pass per-metric weights (family density, schools, affordability, neighborhood character, transit, safety, air quality & child health) and/or ranked priority keywords; optionally scope to one borough. Keywords that map to a metric: safety, schools, academics, affordability, budget, transit, commute, walkability, proximity, community. Any other keyword, including diversity and parks, adds no weight, because no neighborhood score measures it. Returns the top neighborhoods with a fit score and the metric breakdown — a deterministic weighted sort over neighborhood-level data, not a per-child school match.",
       "inputSchema": {
         "type": "object",
         "properties": {
