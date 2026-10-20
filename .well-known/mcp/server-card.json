@@ -1,8 +1,8 @@
 {
   "serverInfo": {
     "name": "motley",
-    "title": "Motley — NYC Neighborhoods, Schools & Admissions",
-    "version": "0.5.0"
+    "title": "Motley NYC — Neighborhoods, Schools & Admissions",
+    "version": "0.6.0"
   },
   "authentication": {
     "required": false,
@@ -277,7 +277,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get schools within a neighborhood — public, charter, and private. Includes quality ratings, grade levels, contact info. Use count_only for a quick summary, or limit/offset to page the full list (the response reports total/returned).",
+      "description": "Get schools within a neighborhood — public, charter, and private. Includes each school's Motley ratings out of 100 (elementary and middle schools on grades 3-8 state tests, high schools on graduation and Regents results; ratings_note says how each is built), grade levels, contact info. Use count_only for a quick summary, or limit/offset to page the full list (the response reports total/returned).",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1811,7 +1811,7 @@
                               "null"
                             ]
                           },
-                          "minutes_bad_day": {
+                          "minutes_high": {
                             "type": [
                               "number",
                               "null"
@@ -1821,7 +1821,7 @@
                         "required": [
                           "nta_code",
                           "minutes_typical",
-                          "minutes_bad_day"
+                          "minutes_high"
                         ],
                         "additionalProperties": false
                       }
