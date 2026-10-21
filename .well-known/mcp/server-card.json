@@ -2,7 +2,7 @@
   "serverInfo": {
     "name": "motley",
     "title": "Motley NYC — Neighborhoods, Schools & Admissions",
-    "version": "0.6.0"
+    "version": "0.8.0"
   },
   "authentication": {
     "required": false,
@@ -1627,7 +1627,12 @@
       },
       "_meta": {
         "openai/toolInvocation/invoking": "Ranking neighborhoods…",
-        "openai/toolInvocation/invoked": "Ranked neighborhoods"
+        "openai/toolInvocation/invoked": "Ranked neighborhoods",
+        "ui": {
+          "resourceUri": "ui://motley/cards-v1.html"
+        },
+        "ui/resourceUri": "ui://motley/cards-v1.html",
+        "openai/outputTemplate": "ui://motley/cards-v1.html"
       }
     },
     {
@@ -2241,6 +2246,210 @@
       "_meta": {
         "openai/toolInvocation/invoking": "Finding the lists…",
         "openai/toolInvocation/invoked": "Found the lists"
+      }
+    },
+    {
+      "annotations": {
+        "title": "Places in a neighborhood",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "description": "Use this when a family asks what's in one NYC neighborhood, or where a kind of place is in it: a library, playgrounds, subway stations or bus stops, coffee, groceries, restaurants, things to do, family resources (rec centers, farmers markets), healthcare (pediatricians, urgent care, hospitals, dentists) or public, charter and private schools. Searches every place we map inside the neighborhood's boundary by name, street or kind (query), or lists every place of one kind (kind); with neither, returns what kinds of places are there, with counts. Results are grouped by category, with a link to each school's page and to the neighborhood's page, which lists every place. Use the nta_code from search-neighborhoods or find-neighborhood.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "NTA code of the neighborhood (from search-neighborhoods or find-neighborhood)"
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "description": "What to look for: a place's name, a street, subway lines, or a kind of place in plain words ('library', 'coffee', 'subway', 'pediatrician'). Omit to list a whole kind, or to get the overview."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "schools",
+              "parks",
+              "transit",
+              "restaurants",
+              "groceries",
+              "cafes",
+              "activities",
+              "resources",
+              "healthcare",
+              "public-schools",
+              "charter-schools",
+              "private-schools",
+              "libraries",
+              "playgrounds",
+              "subway",
+              "bus",
+              "rec-centers",
+              "farmers-markets",
+              "pediatricians",
+              "urgent-care",
+              "hospitals",
+              "dentists"
+            ],
+            "description": "List every place of one kind: a category (schools, parks, transit, restaurants, groceries, cafes, activities, resources = family resources, healthcare) or a specific kind (public-schools, charter-schools, private-schools, libraries, playgrounds, subway, bus, rec-centers, farmers-markets, pediatricians, urgent-care, hospitals, dentists). With a query, the query narrows within the kind."
+          }
+        },
+        "required": [
+          "nta_code"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "name": "find-places",
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "nta_code": {
+            "type": "string"
+          },
+          "neighborhood": {
+            "type": "string"
+          },
+          "borough_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "overview",
+              "results"
+            ]
+          },
+          "total": {
+            "type": "number"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "category": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "total": {
+                  "type": "number"
+                },
+                "places": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "detail": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "school_url": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "detail",
+                      "school_url"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "category",
+                "label",
+                "total",
+                "places"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "count": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "key",
+                "label",
+                "count"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "quick_searches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/properties/categories/items"
+            }
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "nta_code",
+          "neighborhood",
+          "borough_name",
+          "url",
+          "mode",
+          "total",
+          "truncated",
+          "groups",
+          "categories",
+          "quick_searches"
+        ],
+        "additionalProperties": false,
+        "$schema": "http://json-schema.org/draft-07/schema#"
+      },
+      "_meta": {
+        "openai/toolInvocation/invoking": "Searching the neighborhood's places…",
+        "openai/toolInvocation/invoked": "Found places",
+        "ui": {
+          "resourceUri": "ui://motley/cards-v1.html"
+        },
+        "ui/resourceUri": "ui://motley/cards-v1.html",
+        "openai/outputTemplate": "ui://motley/cards-v1.html"
       }
     },
     {
@@ -2980,11 +3189,19 @@
   ],
   "resources": [
     {
+      "description": "The full index of all 262 NYC neighborhoods (NTA code, name, borough, slug) — a browseable catalog for discovering codes to pass to the neighborhood tools.",
       "mimeType": "application/json",
       "name": "NYC neighborhoods catalog",
       "uri": "motley://neighborhoods"
     },
     {
+      "description": "Result cards for rank-neighborhoods and find-places: an MCP Apps view a host renders inline with the tool's result.",
+      "mimeType": "text/html;profile=mcp-app",
+      "name": "motley-cards",
+      "uri": "ui://motley/cards-v1.html"
+    },
+    {
+      "description": "The full NYC school-admissions reference: every entry point (3-K, Pre-K, Kindergarten, G&T) and the 8 middle/high admission methods, each with its typical application window, a live program count, and a special_badge when the method asks for more than a ranked application. Knowledge only.",
       "mimeType": "application/json",
       "name": "NYC admissions reference",
       "uri": "motley://admissions/methods"
