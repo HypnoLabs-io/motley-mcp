@@ -81,7 +81,7 @@ Motley exposes 21 tools. Every one is read-only: none writes anything, and none 
 
 - `motley://neighborhoods` — NYC neighborhoods catalog
 - `motley://admissions/methods` — NYC admissions reference
-- `ui://motley/cards-v1.html` — Result cards for rank-neighborhoods and find-places: an MCP Apps view a host renders inline with the tool's result.
+- `ui://motley/cards-v1.html` — Result cards for rank-neighborhoods, find-places, find-school and browse-schools: an MCP Apps view a host renders inline with the tool's result.
 - `motley://neighborhood/{nta_code}` — Neighborhood summary
 - `motley://admissions/method/{key}` — Admission method explainer
 - Prompt `compare-neighborhoods-for-young-family` — Compare NYC neighborhoods for a young family in a given borough, weighing safety, schools, and family density.

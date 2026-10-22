@@ -338,7 +338,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Find NYC schools citywide by what a family wants — borough, community school district (1-32), grade band (pre-K/elementary/middle/high), school type (public/charter/private), admissions method (zoned, screened, unscreened, limited unscreened, ed-opt, audition, SHSAT, charter lottery, private, universal pre-K), and program focus (arts, sports, STEM, language, academic, clubs). Use this when the family describes the KIND of school they want; use get-schools when you already have an nta_code and want everything in that neighborhood. Pass only the filters actually stated — at least one is required, and an invented one returns nothing. Program focus is tagged on public and charter schools only.",
+      "description": "Find NYC schools citywide by what a family wants — borough, community school district (1-32), grade band (pre-K/elementary/middle/high), school type (public/charter/private), admissions method (zoned, screened, unscreened, limited unscreened, ed-opt, audition, SHSAT, charter lottery, private, universal pre-K), and program focus (arts, sports, STEM, language, academic, clubs). Use this when the family describes the KIND of school they want; use get-schools when you already have an nta_code and want everything in that neighborhood. Pass only the filters actually stated — at least one is required, and an invented one returns nothing. Program focus is tagged on public and charter schools only. Each school carries its Motley ratings out of 100 (ratings_note says how each is built), and url opens the same browse on motley.nyc.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -519,6 +519,49 @@
                     "null"
                   ]
                 },
+                "admissions_method": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "admissions_methods": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "ratings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "grades": {
+                        "type": "string",
+                        "enum": [
+                          "grades 3-8",
+                          "high school"
+                        ]
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "grades",
+                      "score"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "description": "Motley's ratings, out of 100, each named by the grades it covers; empty when the school isn't rated (private schools)."
+                },
                 "programs": {
                   "type": "array",
                   "items": {
@@ -556,24 +599,43 @@
                 "neighborhood",
                 "nta_code",
                 "borough",
-                "slug"
+                "slug",
+                "admissions_method",
+                "admissions_methods",
+                "ratings"
               ],
               "additionalProperties": false
             }
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ratings_note": {
+            "type": "string"
           }
         },
         "required": [
           "total",
           "returned",
           "filters_applied",
-          "schools"
+          "schools",
+          "url",
+          "ratings_note"
         ],
         "additionalProperties": false,
         "$schema": "http://json-schema.org/draft-07/schema#"
       },
       "_meta": {
         "openai/toolInvocation/invoking": "Finding matching schools…",
-        "openai/toolInvocation/invoked": "Found schools"
+        "openai/toolInvocation/invoked": "Found schools",
+        "ui": {
+          "resourceUri": "ui://motley/cards-v1.html"
+        },
+        "ui/resourceUri": "ui://motley/cards-v1.html",
+        "openai/outputTemplate": "ui://motley/cards-v1.html"
       }
     },
     {
@@ -584,7 +646,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Use this to turn a school's name into its DBN — the official name, a common short form ('Brooklyn Tech', 'PS 321'), or a DBN to confirm. Returns candidate schools with their district, neighborhood, admission method and Motley page; pick the one that matches and pass its dbn to get-admissions-demand. Never guess a DBN. K-12 schools only (public, charter, private).",
+      "description": "Use this to turn a school's name into its DBN — the official name, a common short form ('Brooklyn Tech', 'PS 321'), or a DBN to confirm. Returns candidate schools with their district, neighborhood, admission method, Motley ratings out of 100 (ratings_note says how each is built) and Motley page; pick the one that matches and pass its dbn to get-admissions-demand. Never guess a DBN. K-12 schools only (public, charter, private).",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -709,6 +771,30 @@
                     "string",
                     "null"
                   ]
+                },
+                "ratings": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "grades": {
+                        "type": "string",
+                        "enum": [
+                          "grades 3-8",
+                          "high school"
+                        ]
+                      },
+                      "score": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "grades",
+                      "score"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "description": "Motley's ratings, out of 100, each named by the grades it covers; empty when the school isn't rated (private schools)."
                 }
               },
               "required": [
@@ -723,12 +809,16 @@
                 "nta_name",
                 "admissions_method",
                 "admissions_methods",
-                "url"
+                "url",
+                "ratings"
               ],
               "additionalProperties": false
             }
           },
           "message": {
+            "type": "string"
+          },
+          "ratings_note": {
             "type": "string"
           }
         },
@@ -743,7 +833,12 @@
       },
       "_meta": {
         "openai/toolInvocation/invoking": "Looking up the school…",
-        "openai/toolInvocation/invoked": "Found matching schools"
+        "openai/toolInvocation/invoked": "Found matching schools",
+        "ui": {
+          "resourceUri": "ui://motley/cards-v1.html"
+        },
+        "ui/resourceUri": "ui://motley/cards-v1.html",
+        "openai/outputTemplate": "ui://motley/cards-v1.html"
       }
     },
     {
@@ -2374,6 +2469,14 @@
                           "string",
                           "null"
                         ]
+                      },
+                      "governance": {
+                        "type": "string",
+                        "enum": [
+                          "public",
+                          "charter",
+                          "private"
+                        ]
                       }
                     },
                     "required": [
@@ -3195,7 +3298,7 @@
       "uri": "motley://neighborhoods"
     },
     {
-      "description": "Result cards for rank-neighborhoods and find-places: an MCP Apps view a host renders inline with the tool's result.",
+      "description": "Result cards for rank-neighborhoods, find-places, find-school and browse-schools: an MCP Apps view a host renders inline with the tool's result.",
       "mimeType": "text/html;profile=mcp-app",
       "name": "motley-cards",
       "uri": "ui://motley/cards-v1.html"
