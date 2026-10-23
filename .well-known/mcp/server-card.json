@@ -2,7 +2,7 @@
   "serverInfo": {
     "name": "motley",
     "title": "Motley NYC — Neighborhoods, Schools & Admissions",
-    "version": "0.8.0"
+    "version": "0.10.0"
   },
   "authentication": {
     "required": false,
@@ -25,7 +25,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Search and filter NYC neighborhoods by borough or name. Returns NTA codes, names, boroughs, and centroid coordinates.",
+      "description": "Search and filter NYC neighborhoods by borough, by name (typos and nicknames like 'Bed-Stuy' or 'UWS' included), or by a description of what a family wants nearby ('near the water', 'brownstones and big parks'). Returns NTA codes, names, boroughs, and centroid coordinates; with a query, name matches come first and each result says what it matched on (match_reason). For ranking by a score, use rank-neighborhoods instead.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -42,7 +42,7 @@
           },
           "query": {
             "type": "string",
-            "description": "Search NTA name (case-insensitive)"
+            "description": "A neighborhood's name (official or common, typos and nicknames like 'Bed-Stuy' or 'UWS' included), or a description of what the family wants nearby ('near the water', 'brownstones and big parks'). Name matches come first; each match says what it matched on."
           },
           "limit": {
             "type": "number",
@@ -106,6 +106,25 @@
                     "number",
                     "null"
                   ]
+                },
+                "match_reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "scores": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               "required": [
@@ -116,6 +135,37 @@
               ],
               "additionalProperties": true
             }
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "hybrid",
+              "lexical"
+            ]
+          },
+          "query": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "object",
+            "properties": {
+              "borough": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "borough"
+            ],
+            "additionalProperties": false
+          },
+          "total": {
+            "type": "number"
+          },
+          "url": {
+            "type": "string"
           }
         },
         "required": [
@@ -127,7 +177,12 @@
       },
       "_meta": {
         "openai/toolInvocation/invoking": "Searching NYC neighborhoods…",
-        "openai/toolInvocation/invoked": "Found neighborhoods"
+        "openai/toolInvocation/invoked": "Found neighborhoods",
+        "ui": {
+          "resourceUri": "ui://motley/cards-v1.html"
+        },
+        "ui/resourceUri": "ui://motley/cards-v1.html",
+        "openai/outputTemplate": "ui://motley/cards-v1.html"
       }
     },
     {
@@ -338,10 +393,16 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Find NYC schools citywide by what a family wants — borough, community school district (1-32), grade band (pre-K/elementary/middle/high), school type (public/charter/private), admissions method (zoned, screened, unscreened, limited unscreened, ed-opt, audition, SHSAT, charter lottery, private, universal pre-K), and program focus (arts, sports, STEM, language, academic, clubs). Use this when the family describes the KIND of school they want; use get-schools when you already have an nta_code and want everything in that neighborhood. Pass only the filters actually stated — at least one is required, and an invented one returns nothing. Program focus is tagged on public and charter schools only. Each school carries its Motley ratings out of 100 (ratings_note says how each is built), and url opens the same browse on motley.nyc. New York City only: for schools in any other city, don't call this; say Motley NYC covers New York City.",
+      "description": "Find NYC schools citywide by what a family wants — borough, community school district (1-32), grade band (pre-K/elementary/middle/high), school type (public/charter/private), admissions method (zoned, screened, unscreened, limited unscreened, ed-opt, audition, SHSAT, charter lottery, private, universal pre-K), and program focus (arts, sports, STEM, language, academic, clubs). Use this when the family describes the KIND of school they want; use get-schools when you already have an nta_code and want everything in that neighborhood. For what the filters can't say — a program or approach like 'Spanish dual language', 'Montessori' or 'a strong music program' — pass the family's words as query: results come best match first, each with the line it matched on (match_reason). Pass only the filters actually stated — at least one (a query counts) is required, and an invented one returns nothing. Program focus is tagged on public and charter schools only. Each school carries its Motley ratings out of 100 (ratings_note says how each is built), and url opens the same browse on motley.nyc. New York City only: for schools in any other city, don't call this; say Motley NYC covers New York City.",
       "inputSchema": {
         "type": "object",
         "properties": {
+          "query": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 120,
+            "description": "The family's own words for what they want that the filters can't say — a program or approach ('Spanish dual language', 'Montessori', 'strong music program', 'robotics'). Ranks the matches best first, each with the line it matched on (match_reason). Leave out anything you pass as a filter, and never use it for a school's name (find-school) or for ratings."
+          },
           "borough": {
             "type": "string",
             "enum": [
@@ -587,6 +648,12 @@
                     ],
                     "additionalProperties": false
                   }
+                },
+                "match_reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
                 }
               },
               "required": [
@@ -614,6 +681,16 @@
             ]
           },
           "ratings_note": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "hybrid",
+              "lexical"
+            ]
+          },
+          "match_note": {
             "type": "string"
           }
         },
@@ -1411,7 +1488,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Rank NYC's residential neighborhoods by what a family cares about — the same ranking as Best fit on motley.nyc. Pass ranked priority words, most important first: families, schools, affordability, character, getting-around, safety, air-and-health (and synonyms such as crime, rent, transit, commute, kids), plus two factors — parks or playgrounds (the share of homes within a 10-minute walk of an NYC Parks playground) and diversity (how evenly residents spread across five census groups). Or pass per-metric weights for the seven scores. Optionally scope to one borough. Returns the top neighborhoods with a fit score and the score breakdown, which factors counted, any priority words we don't measure (relay them — they added nothing), and a best_fit_url that opens the same ranking on motley.nyc. A deterministic weighted sort over neighborhood-level data, not a per-child school match.",
+      "description": "Rank NYC's residential neighborhoods by what a family cares about — the same ranking as Best fit on motley.nyc. Pass ranked priority words, most important first: families, schools, affordability, character, getting-around, safety, air-and-health (and synonyms such as crime, rent, transit, commute, kids), plus two factors — parks or playgrounds (the share of homes within a 10-minute walk of an NYC Parks playground) and diversity (how evenly residents spread across five census groups). Or pass per-metric weights for the seven scores. To rank by ONE score alone ('safest in Queens', 'rate Brooklyn by things to do'), pass sort_by instead — Family Fit and Things to Do included — and relay what sort_by.measures says the score counts. Optionally scope to one borough. Returns the top neighborhoods with a fit score and the score breakdown, which factors counted, any priority words we don't measure (relay them — they added nothing), and a best_fit_url that opens the same ranking on motley.nyc. A deterministic weighted sort over neighborhood-level data, not a per-child school match.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1456,6 +1533,21 @@
               "type": "string"
             },
             "description": "What the family cares about, most important first — e.g. [\"parks\",\"schools\",\"safety\"]. Score words: families, schools, affordability, character, getting-around, safety, air-and-health (and synonyms like crime, rent, transit, commute, kids). Factor words: parks or playgrounds (homes near an NYC Parks playground), diversity. Weighted 1, ½, ⅓… by position. Words we don't map come back in `unrecognized_priorities`."
+          },
+          "sort_by": {
+            "type": "string",
+            "enum": [
+              "family-fit",
+              "families",
+              "schools",
+              "affordability",
+              "character",
+              "getting-around",
+              "safety",
+              "air-and-health",
+              "things-to-do"
+            ],
+            "description": "Rank by ONE score alone, highest first — for 'safest neighborhoods in Queens' or 'rate Brooklyn by things to do'. family-fit is the overall Family Fit score; families is the families score. When set, weights and priorities are ignored (0.9.0)."
           },
           "borough": {
             "type": "string",
@@ -1537,8 +1629,54 @@
             "enum": [
               "weights",
               "priorities",
-              "default"
+              "default",
+              "sort_by"
             ]
+          },
+          "sort_by": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "enum": [
+                      "family-fit",
+                      "families",
+                      "schools",
+                      "affordability",
+                      "character",
+                      "getting-around",
+                      "safety",
+                      "air-and-health",
+                      "things-to-do"
+                    ]
+                  },
+                  "column": {
+                    "type": "string"
+                  },
+                  "label": {
+                    "type": "string"
+                  },
+                  "measures": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "key",
+                  "column",
+                  "label",
+                  "measures"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sort_note": {
+            "type": "string"
           },
           "factors": {
             "type": "array",
@@ -1671,6 +1809,12 @@
                     },
                     "health_environment": {
                       "$ref": "#/properties/weights_used/properties/health_environment"
+                    },
+                    "viability_score": {
+                      "type": "number"
+                    },
+                    "competitor_gap": {
+                      "type": "number"
                     }
                   },
                   "required": [
@@ -1707,6 +1851,7 @@
         "required": [
           "weights_used",
           "weights_source",
+          "sort_by",
           "factors",
           "unrecognized_priorities",
           "scope",
