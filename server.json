@@ -4,7 +4,7 @@
   "title": "Motley NYC — Neighborhoods, Schools & Admissions",
   "description": "Find, compare, and rank NYC neighborhoods and schools, plus how NYC school admissions works.",
   "websiteUrl": "https://motley.nyc/mcp",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "remotes": [
     {
       "type": "streamable-http",

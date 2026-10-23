@@ -2,7 +2,7 @@
   "serverInfo": {
     "name": "motley",
     "title": "Motley NYC — Neighborhoods, Schools & Admissions",
-    "version": "0.10.0"
+    "version": "0.11.0"
   },
   "authentication": {
     "required": false,
@@ -3443,7 +3443,7 @@
       "uri": "motley://neighborhoods"
     },
     {
-      "description": "Result cards for rank-neighborhoods, find-places, find-school and browse-schools: an MCP Apps view a host renders inline with the tool's result.",
+      "description": "Result cards for rank-neighborhoods, search-neighborhoods, find-places, find-school and browse-schools: an MCP Apps view a host renders inline with the tool's result.",
       "mimeType": "text/html;profile=mcp-app",
       "name": "motley-cards",
       "uri": "ui://motley/cards-v1.html"
