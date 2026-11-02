@@ -2,7 +2,7 @@
   "serverInfo": {
     "name": "motley",
     "title": "Motley NYC — Neighborhoods, Schools & Admissions",
-    "version": "0.11.0"
+    "version": "0.12.0"
   },
   "authentication": {
     "required": false,
@@ -455,9 +455,11 @@
               "type": "string",
               "enum": [
                 "zoned",
+                "zone_priority",
                 "unscreened",
                 "limited_unscreened",
                 "screened",
+                "language_criteria",
                 "ed_opt",
                 "audition",
                 "shsat",
@@ -1060,6 +1062,12 @@
               "url"
             ],
             "additionalProperties": false
+          },
+          "also_zoned_schools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/properties/zoned_school"
+            }
           },
           "note": {
             "type": "string"
@@ -2867,7 +2875,7 @@
         "properties": {
           "method": {
             "type": "string",
-            "description": "An admission method key (shsat, audition, screened, ed_opt, limited_unscreened, unscreened, zoned, charter_lottery, private_admissions, prek_universal) OR an early entry point (three-k, pre-k, kindergarten, gifted-talented)."
+            "description": "An admission method key (shsat, audition, screened, language_criteria, ed_opt, limited_unscreened, unscreened, zone_priority, zoned, charter_lottery, private_admissions, prek_universal) OR an early entry point (three-k, pre-k, kindergarten, gifted-talented)."
           }
         },
         "required": [
