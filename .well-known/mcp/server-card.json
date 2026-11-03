@@ -2,7 +2,7 @@
   "serverInfo": {
     "name": "motley",
     "title": "Motley NYC — Neighborhoods, Schools & Admissions",
-    "version": "0.12.0"
+    "version": "0.13.0"
   },
   "authentication": {
     "required": false,
@@ -393,7 +393,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Find NYC schools citywide by what a family wants — borough, community school district (1-32), grade band (pre-K/elementary/middle/high), school type (public/charter/private), admissions method (zoned, screened, unscreened, limited unscreened, ed-opt, audition, SHSAT, charter lottery, private, universal pre-K), and program focus (arts, sports, STEM, language, academic, clubs). Use this when the family describes the KIND of school they want; use get-schools when you already have an nta_code and want everything in that neighborhood. For what the filters can't say — a program or approach like 'Spanish dual language', 'Montessori' or 'a strong music program' — pass the family's words as query: results come best match first, each with the line it matched on (match_reason). Pass only the filters actually stated — at least one (a query counts) is required, and an invented one returns nothing. Program focus is tagged on public and charter schools only. Each school carries its Motley ratings out of 100 (ratings_note says how each is built), and url opens the same browse on motley.nyc. New York City only: for schools in any other city, don't call this; say Motley NYC covers New York City.",
+      "description": "Find NYC schools citywide by what a family wants — borough, community school district (1-32), grade band (pre-K/elementary/middle/high), school type (public/charter/private), admissions method (zoned, zone priority, unscreened, limited unscreened, screened, language criteria, ed-opt, audition, SHSAT, charter lottery, private, universal pre-K), and program focus (arts, sports, STEM, language, academic, clubs). Use this when the family describes the KIND of school they want; use get-schools when you already have an nta_code and want everything in that neighborhood. For what the filters can't say — a program or approach like 'Spanish dual language', 'Montessori' or 'a strong music program' — pass the family's words as query: results come best match first, each with the line it matched on (match_reason). At least one filter is required (a query counts); each filter narrows the results, so one the family didn't state drops schools they may want. Program focus is tagged on public and charter schools only. Each school carries its Motley ratings out of 100 (ratings_note says how each is built), and url opens the same browse on motley.nyc. Coverage is New York City's five boroughs only: every filter value and every result is an NYC school.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -401,7 +401,7 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 120,
-            "description": "The family's own words for what they want that the filters can't say — a program or approach ('Spanish dual language', 'Montessori', 'strong music program', 'robotics'). Ranks the matches best first, each with the line it matched on (match_reason). Leave out anything you pass as a filter, and never use it for a school's name (find-school) or for ratings."
+            "description": "The family's own words for what they want that the filters can't say — a program or approach ('Spanish dual language', 'Montessori', 'strong music program', 'robotics'). Ranks the matches best first, each with the line it matched on (match_reason). Anything passed as a filter is already applied; a school's name goes to find-school, and ratings aren't searchable text."
           },
           "borough": {
             "type": "string",
@@ -423,7 +423,7 @@
             },
             "minItems": 1,
             "maxItems": 8,
-            "description": "Community school district numbers, 1-32. A borough is NOT a district — for 'schools in the Bronx' use `borough` and omit this. Never guess one."
+            "description": "Community school district numbers, 1-32. A borough is NOT a district — for 'schools in the Bronx' use `borough` and omit this. A district the family didn't name filters out every other one."
           },
           "grade_band": {
             "type": "string",
@@ -725,7 +725,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Use this to turn a school's name into its DBN — the official name, a common short form ('Brooklyn Tech', 'PS 321'), or a DBN to confirm. Returns candidate schools with their district, neighborhood, admission method, Motley ratings out of 100 (ratings_note says how each is built) and Motley page; pick the one that matches and pass its dbn to get-admissions-demand. Never guess a DBN. K-12 schools only (public, charter, private).",
+      "description": "Use this to turn a school's name into its DBN — the official name, a common short form ('Brooklyn Tech', 'PS 321'), or a DBN to confirm. Returns candidate schools with their district, neighborhood, admission method, Motley ratings out of 100 (ratings_note says how each is built) and Motley page; the matching row's dbn is the input get-admissions-demand takes, and a DBN no lookup returned matches nothing. K-12 schools only (public, charter, private).",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1496,7 +1496,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Rank NYC's residential neighborhoods by what a family cares about — the same ranking as Best fit on motley.nyc. Pass ranked priority words, most important first: families, schools, affordability, character, getting-around, safety, air-and-health (and synonyms such as crime, rent, transit, commute, kids), plus two factors — parks or playgrounds (the share of homes within a 10-minute walk of an NYC Parks playground) and diversity (how evenly residents spread across five census groups). Or pass per-metric weights for the seven scores. To rank by ONE score alone ('safest in Queens', 'rate Brooklyn by things to do'), pass sort_by instead — Family Fit and Things to Do included — and relay what sort_by.measures says the score counts. Optionally scope to one borough. Returns the top neighborhoods with a fit score and the score breakdown, which factors counted, any priority words we don't measure (relay them — they added nothing), and a best_fit_url that opens the same ranking on motley.nyc. A deterministic weighted sort over neighborhood-level data, not a per-child school match.",
+      "description": "Rank NYC's residential neighborhoods by what a family cares about — the same ranking as Best fit on motley.nyc. Pass ranked priority words, most important first: families, schools, affordability, character, getting-around, safety, air-and-health (and synonyms such as crime, rent, transit, commute, kids), plus two factors — parks or playgrounds (the share of homes within a 10-minute walk of an NYC Parks playground) and diversity (how evenly residents spread across five census groups). Or pass per-metric weights for the seven scores. To rank by ONE score alone ('safest in Queens', 'rate Brooklyn by things to do'), pass sort_by instead (Family Fit and Things to Do included); the answer's sort_by.measures says what that score counts. Optionally scope to one borough. Returns the top neighborhoods with a fit score and the score breakdown, which factors counted, any priority words we don't measure (unrecognized_priorities, which added nothing to the ranking), and a best_fit_url that opens the same ranking on motley.nyc. A deterministic weighted sort over neighborhood-level data, not a per-child school match.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2127,7 +2127,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Use this when a family asks how one of Motley's scores is computed — a neighborhood score (Family Fit, Schools, Safety / Peace of Mind, Affordability, Getting Around, Neighborhood Character, Air & Child Health, Things to Do) or the school rating — or whether the scores are biased toward wealthier areas. Returns what the score measures, its inputs and weights, how they combine, its share of Family Fit, its known limits, its sources, and how it moves with neighborhood income (Spearman's ρ with median household income). Relay the income figure plainly; don't reassure past it.",
+      "description": "Use this when a family asks how one of Motley's scores is computed — a neighborhood score (Family Fit, Schools, Safety / Peace of Mind, Affordability, Getting Around, Neighborhood Character, Air & Child Health, Things to Do) or the school rating — or whether the scores are biased toward wealthier areas. Returns what the score measures, its inputs and weights, how they combine, its share of Family Fit, its known limits, its sources, and the Spearman correlation (ρ) of the score with neighborhood median household income, with a plain reading of it.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2337,7 +2337,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Use this when a family asks for lists of NYC schools or neighborhoods picked by a rule rather than a ranking: zoned schools that beat their district while serving high-need students; high school programs with more seats per applicant; schools where no group is a majority and families rate them highly (kind 'schools'); or affordable family neighborhoods with such a school, and family neighborhoods where no single group is a majority (kind 'neighborhoods'). Optionally one borough. Each list carries its rule, its true count and its first members. State the rule; don't call members 'best' or 'hidden gems'.",
+      "description": "Use this when a family asks for lists of NYC schools or neighborhoods picked by a rule rather than a ranking: zoned schools that beat their district while serving high-need students; high school programs with more seats per applicant; schools where no group is a majority and families rate them highly (kind 'schools'); or affordable family neighborhoods with such a school, and family neighborhoods where no single group is a majority (kind 'neighborhoods'). Optionally one borough. Each list is defined by its stated rule, not ranked by quality, and carries that rule, its true count and its first members.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2716,7 +2716,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Get the full NYC school-admissions reference: every entry point from 3-K and Pre-K through Kindergarten, Gifted & Talented, and the 8 middle/high admission methods (SHSAT, audition, screened, Ed-Opt, limited unscreened, unscreened, zoned, charter lottery) — each with its typical application window. The methods carry a live program count plus a special_badge naming any extra ask beyond the standard application (an audition, a test, an open-house sign-in), null when there is none; optional band/governance filters narrow the count. Knowledge only.",
+      "description": "Get the full NYC school-admissions reference: every entry point from 3-K and Pre-K through Kindergarten, Gifted & Talented, and the 10 admission methods (SHSAT, audition, screened, language criteria, Ed-Opt, limited unscreened, unscreened, zone priority, zoned, charter lottery) — each with its typical application window. The methods carry a live program count plus a special_badge naming any extra ask beyond the standard application (an audition, a test, an open-house sign-in), null when there is none; optional band/governance filters narrow the count. Knowledge only.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2869,7 +2869,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Explain one NYC admission entry point or method in full — the plain-English explainer, its typical deadline window, and, when the method asks a family for more than a ranked application, exactly what it requires (audition or portfolio, SHSAT registration, a demonstrated-interest sign-in, a private school's own test/interview track) plus the extra paperwork that comes with it. Pass a method key (shsat, audition, screened, ed_opt, limited_unscreened, unscreened, zoned, charter_lottery, private_admissions, prek_universal) or an early entry point (three-k, pre-k, kindergarten, gifted-talented).",
+      "description": "Explain one NYC admission entry point or method in full — the plain-English explainer, its typical deadline window, and, when the method asks a family for more than a ranked application, exactly what it requires (audition or portfolio, SHSAT registration, a demonstrated-interest sign-in, a private school's own test/interview track) plus the extra paperwork that comes with it. Pass a method key (shsat, audition, screened, language_criteria, ed_opt, limited_unscreened, unscreened, zone_priority, zoned, charter_lottery, private_admissions, prek_universal) or an early entry point (three-k, pre-k, kindergarten, gifted-talented).",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2988,14 +2988,14 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Use this when a family asks how a specific school admits students or how hard it is to get in. Returns the school's admission method in full (what it asks of a family, and when), its programs with seats and who may apply, and — where NYC MySchools publishes them — seats vs. applicants per program with a competitiveness band that is Motley's own, not a DOE rating. Most middle schools, and all charter and private schools, have no applicant counts. The counts describe the whole applicant pool: never turn them into a family's odds, chance or percentage, even when asked for one. Needs a DBN; resolve a name with find-school first.",
+      "description": "Use this when a family asks how a specific school admits students or how hard it is to get in. Returns the school's admission method in full (what it asks of a family, and when), its programs with seats and who may apply, and — where NYC MySchools publishes them — seats vs. applicants per program with a competitiveness band that is Motley's own, not a DOE rating. Most middle schools, and all charter and private schools, have no applicant counts. The counts describe the whole applicant pool and are not a per-family probability of admission. Takes a DBN; find-school turns a school's name into one.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "dbn": {
             "type": "string",
             "maxLength": 40,
-            "description": "School DBN (e.g. 02M475 for Stuyvesant, 13K430 for Brooklyn Tech). Resolve a school's name with find-school first; never guess one."
+            "description": "School DBN (e.g. 02M475 for Stuyvesant, 13K430 for Brooklyn Tech). find-school turns a school's name into one."
           }
         },
         "required": [
@@ -3259,7 +3259,7 @@
         "idempotentHint": true,
         "openWorldHint": false
       },
-      "description": "Use this when a family asks what's coming for their child — which NYC school applications (3-K, Pre-K, Kindergarten, Gifted & Talented, middle school, high school) they'll make, and when. Pass each child's current grade, or an age (0–5) for a child not in school yet. Returns every transition in the next two years with the city's published dates where it has announced them, and the typical window where it hasn't. Never present a typical window as a date.",
+      "description": "Use this when a family asks what's coming for their child — which NYC school applications (3-K, Pre-K, Kindergarten, Gifted & Talented, middle school, high school) they'll make, and when. Pass each child's current grade, or an age (0–5) for a child not in school yet. Returns every transition in the next two years with the city's published dates where it has announced them, and the typical window where it hasn't. Typical windows are marked typical_window and are estimates until the city publishes the year's dates.",
       "inputSchema": {
         "type": "object",
         "properties": {
